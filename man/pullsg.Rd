@@ -4,19 +4,30 @@
 \alias{pullsg}
 \title{Pull the raw survey response data from Survey Gizmo, storing an unmodified dataframe.}
 \usage{
-pullsg(sg_surveyid, api, completes = T)
+pullsg(sg_surveyid, api, completes = T, delete_sys_vars = F, clean = F,
+  reset_row_names = T)
 }
 \arguments{
-\item{sg_surveyid}{The unique Id number of the survey (in V3, the portion of the
-build URL which follows "id": ...build/id/1234567}
+\item{sg_surveyid}{The unique Id number of the survey (in V4 of the API, the portion of the
+surveyresponse call URL which follows "id/": ...build/id/1234567}
 
 \item{api}{The user's unique private API key for Survey Gizmo}
 
 \item{completes}{Should the download include partial responses?}
+
+\item{delete_sys_vars}{Deletes all sys_* variables from the returned data.}
+
+\item{clean}{Performs three transformations: (1) attempts to coerce vectors to numeric if all values are numbers or "" (uses type.convert),
+(2) deletes sys_* variables, and (3) removes other non-survey-question variables returned by the Survey Gizmo API, including:
+"contactid", "istestdata", "sessionid", "language", "ilinkid", and "sresponsecomment" (as of V4 of the API).}
+
+\item{reset_row_names}{Resets row.names (1, 2,..N) in the returned dataframe.}
 }
 \description{
-The function automatically calculates the number of JSON data pulls needed to
-download a fully formed extract of the survey. It then binds together all
-returned data into a single dataframe for subsequent manipulation.
+This function automatically calculates the number of JSON data pulls needed to
+download a fully formed extract of a survey. It then binds together all
+returned data into a single dataframe for subsequent manipulation. It is strongly
+recommended that the user first assign "aliases" to each question prior to utilizing this function
+to ensure that variable names are interpretable in the returned data frame.
 }
 
