@@ -1,0 +1,13 @@
+Package: Rsurveygizmo
+Type: Package
+Title: Pull Response Data from Survey Gizmo AWS Servers
+Version: 0.1.0
+Author: Derek Darves and Ari Lamstein
+Maintainer: Derek Darves <ddarves@cpg.org>
+Description: Pulls data from Survey Gizmo using your account API key and a valid
+    survey project number.
+License: GPL-3
+Imports:
+    jsonlite
+LazyData: TRUE
+RoxygenNote: 5.0.1
