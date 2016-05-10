@@ -1,19 +1,22 @@
 #' Pull the raw survey response data from Survey Gizmo, storing an unmodified dataframe.
 #'
-#' This function automatically calculates the number of JSON data pulls needed to
-#' download a fully formed extract of a survey. It then binds together all
-#' returned data into a single dataframe for subsequent manipulation. It is strongly
-#' recommended that the user first assign "aliases" to each question prior to utilizing this function
-#' to ensure that variable names are interpretable in the returned data frame.
-#' @param sg_surveyid The unique Id number of the survey (in V4 of the API, the portion of the
-#' surveyresponse call URL which follows "id/": ...build/id/1234567
-#' @param api The user's unique private API key for Survey Gizmo
-#' @param completes Should the download include partial responses?
-#' @param delete_sys_vars Deletes all sys_* variables from the returned data.
-#' @param reset_row_names Resets row.names (1, 2,..N) in the returned dataframe.
-#' @param clean Performs three transformations: (1) attempts to coerce vectors to numeric if all values are numbers or "" (uses type.convert),
-#' (2) deletes sys_* variables, and (3) removes other non-survey-question variables returned by the Survey Gizmo API, including:
-#' "contactid", "istestdata", "sessionid", "language", "ilinkid", and "sresponsecomment" (as of V4 of the API).
+#' This function downloads a survey's response data from Survey Gizmo (SG), saving
+#' the returned data as a \code{\link{data.frame}}. Because SG limits the size of JSON data pulls via the API (currently, the limit is 250),
+#' it calculates the number of pulls needed to download the entire response set and binds the returned frames.
+#' To ensure that variable names are interpretable in the returned data frame, it is strongly recommended
+#' that users first assign question \href{https://help.surveygizmo.com/help/article/link/using-question-aliases}{aliases} to each question prior to utilizing this function.
+#'
+#' @param sg_surveyid The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse}call URL which follows "id/", e.g.: "...build/id/1234567"
+#' @param api The user's private API key for Survey Gizmo
+#' @param completes Should the download drop partial responses (Default)?
+#' @param delete_sys_vars Delete all SG system variables (i.e., non-response fields of the form [[variable(...)]] from the returned data.frame (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)?
+#' @param reset_row_names Reset row.names to 1, 2,..N in the returned dataframe (Default)?
+#' @param clean This option performs three transformations to the returned data.frame:
+#' \enumerate{
+#'   \item attempts to coerce vectors to numeric if all values are numbers or "" (uses \code{\link{type.convert}})
+#'   \item deletes SG system variables (i.e., non-question responses)
+#'   \item removes other non-survey-question variables returned by the Survey Gizmo API, including: "contactid", "istestdata", "sessionid", "language", "ilinkid", and "sresponsecomment" (as of V4 of the SG API)
+#' }
 #' @importFrom jsonlite fromJSON
 #' @export
 pullsg <- function(sg_surveyid, api, completes=T, delete_sys_vars=F, clean=F, reset_row_names=T) {
@@ -66,13 +69,14 @@ pullsg <- function(sg_surveyid, api, completes=T, delete_sys_vars=F, clean=F, re
 		assign(paste0("lc_survey_page", i), sg_return_data)
 	}
 
-	#Bind the frame returned by JSONlite
+	#Bind the returned frames
 	lc_tobind  <- ls(pattern="lc_survey_page")
-	lc_fullset <- do.call("rbind", mget(lc_tobind)) #This N should match SG dash
+	lc_fullset <- do.call("rbind", mget(lc_tobind))
 
 	# Process the column names
 	lc_names <- names(lc_fullset)
 
+	# Defined patterns to drop
 	patterns = "[[:punct:]]|[[:space:]]|question|shown|STANDARD"
 
 	# Hidden values generally take form of: 'question(76), option(0)'

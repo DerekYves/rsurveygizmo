@@ -1,6 +1,6 @@
 Package: Rsurveygizmo
 Type: Package
-Title: Pull Response Data from Survey Gizmo AWS Servers
+Title: Download Response Data from Survey Gizmo
 Version: 0.1.0
 Author: Derek Darves and Ari Lamstein
 Maintainer: Derek Darves <ddarves@cpg.org>
