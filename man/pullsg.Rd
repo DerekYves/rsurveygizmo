@@ -2,19 +2,38 @@
 % Please edit documentation in R/pullsg.R
 \name{pullsg}
 \alias{pullsg}
-\title{Pull the raw survey response data from Survey Gizmo, storing an unmodified dataframe.}
+\title{Download survey response data from Survey Gizmo, storing an R dataframe.}
 \usage{
-pullsg(sg_surveyid, api, completes = T, delete_sys_vars = F,
+pullsg(surveyid, api, completes_only = T, delete_sys_vars = F,
   keep_geo_vars = T, clean = F, reset_row_names = T)
 }
 \arguments{
-\item{sg_surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}
+\item{surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}
 
 \item{api}{The user's private API key for Survey Gizmo}
 
-\item{delete_sys_vars}{When true, deletes SG system variables (i.e., fields of the form [[variable(...)]] that do \emph{not} contain question responses. See \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for more information about fields returned by SG via the API)?}
+\item{completes_only}{When true (the Default), survey responses with a status of
+"Complete" are saved. Responses with a status of "disqualified", "partial", etc.
+are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)}
 
-\item{keep_geo_vars}{When true (the default), SG's geographic variables (lat/long, city, etc.), which are estimated using the respondent's IP address, are preserved in the returned data.frame}
+\item{delete_sys_vars}{When true, deletes SG system variables (i.e., fields
+of the form [[variable(...)]] that do \emph{not} contain question responses.
+\strong{NOTE:} When set to false, pullsg will change the stub of SG system variables to \emph{sys_*}
+See \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link}
+for more information about fields returned by SG via the API).}
+
+\item{keep_geo_vars}{When true (the default), SG's geographic variables
+(lat/long, city, etc.), which are estimated using the respondent's IP address,
+are preserved in the returned data.frame. This option also changes the name of
+the geographic variables to:
+\itemize{
+  \item \emph{rsp_lng}
+  \item \emph{rsp_lat}
+  \item \emph{rsp_cntr}
+  \item \emph{rsp_city}
+  \item \emph{rsp_regi}
+  \item \emph{rsp_post}
+  }}
 
 \item{clean}{This option performs three transformations to the returned data.frame:
 \enumerate{
@@ -24,8 +43,6 @@ pullsg(sg_surveyid, api, completes = T, delete_sys_vars = F,
 }}
 
 \item{reset_row_names}{When true (the default), resets row names to 1, 2,..N in the returned dataframe}
-
-\item{completes_only}{When true (the Default), survey responses with a status of "Complete" are saved. Responses with a status of "disqualified", "partial", etc. are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)}
 }
 \description{
 This function downloads a survey's response data from Survey Gizmo (SG), saving

@@ -1,4 +1,4 @@
-#' Pull the raw survey response data from Survey Gizmo, storing an unmodified dataframe.
+#' Download survey response data from Survey Gizmo, storing an R dataframe.
 #'
 #' This function downloads a survey's response data from Survey Gizmo (SG), saving
 #' the returned data as an R \code{\link{data.frame}}. Because SG limits the size of JSON data pulls via the API (currently, the limit is 250),
@@ -6,11 +6,28 @@
 #' To ensure that variable names are interpretable in the returned data frame, it is strongly recommended
 #' that users first assign question \href{https://help.surveygizmo.com/help/article/link/using-question-aliases}{aliases} to each question prior to utilizing this function.
 #'
-#' @param sg_surveyid The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"
+#' @param surveyid The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"
 #' @param api The user's private API key for Survey Gizmo
-#' @param completes_only When true (the Default), survey responses with a status of "Complete" are saved. Responses with a status of "disqualified", "partial", etc. are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)
-#' @param delete_sys_vars When true, deletes SG system variables (i.e., fields of the form [[variable(...)]] that do \emph{not} contain question responses. See \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for more information about fields returned by SG via the API)?
-#' @param keep_geo_vars When true (the default), SG's geographic variables (lat/long, city, etc.), which are estimated using the respondent's IP address, are preserved in the returned data.frame
+#' @param completes_only When true (the Default), survey responses with a status of
+#' "Complete" are saved. Responses with a status of "disqualified", "partial", etc.
+#' are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)
+#' @param delete_sys_vars When true, deletes SG system variables (i.e., fields
+#' of the form [[variable(...)]] that do \emph{not} contain question responses.
+#' \strong{NOTE:} When set to false, pullsg will change the stub of SG system variables to \emph{sys_*}
+#' See \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link}
+#' for more information about fields returned by SG via the API).
+#' @param keep_geo_vars When true (the default), SG's geographic variables
+#' (lat/long, city, etc.), which are estimated using the respondent's IP address,
+#' are preserved in the returned data.frame. This option also changes the name of
+#' the geographic variables to:
+#' \itemize{
+#'   \item \emph{rsp_lng}
+#'   \item \emph{rsp_lat}
+#'   \item \emph{rsp_cntr}
+#'   \item \emph{rsp_city}
+#'   \item \emph{rsp_regi}
+#'   \item \emph{rsp_post}
+#'   }
 #' @param reset_row_names When true (the default), resets row names to 1, 2,..N in the returned dataframe
 #' @param clean This option performs three transformations to the returned data.frame:
 #' \enumerate{
@@ -20,7 +37,7 @@
 #' }
 #' @importFrom jsonlite fromJSON
 #' @export
-pullsg <- function(sg_surveyid, api, completes=T, delete_sys_vars=F, keep_geo_vars=T, clean=F, reset_row_names=T) {
+pullsg <- function(surveyid, api, completes_only=T, delete_sys_vars=F, keep_geo_vars=T, clean=F, reset_row_names=T) {
 
 	options(stringsAsFactors=F)
 
@@ -35,7 +52,7 @@ pullsg <- function(sg_surveyid, api, completes=T, delete_sys_vars=F, keep_geo_va
 	#Build local parameters
 	filturl  <- paste0("&filter[field][0]=status&filter[operator][0]==",
 					   "&filter[value][0]=Complete")
-	if (completes == T) {
+	if (completes_only == T) {
 		filt = filturl
 	} else {
 		filt <- ""
@@ -102,14 +119,13 @@ pullsg <- function(sg_surveyid, api, completes=T, delete_sys_vars=F, keep_geo_va
 	lc_names <- lapply(lc_names, gsub, patt= patterns, rep="")
 
 	# Save geographiv variables based on respondent IP
-	keep_geo_vars <- T
 	if(keep_geo_vars) {
-		lc_names <- lapply(lc_names, gsub, patt="^variableLONG$", rep="rsp_lng")
-		lc_names <- lapply(lc_names, gsub, patt="^variableLAT$", rep="rsp_lat")
+		lc_names <- lapply(lc_names, gsub, patt="^variableLONG$",       rep="rsp_lng")
+		lc_names <- lapply(lc_names, gsub, patt="^variableLAT$",        rep="rsp_lat")
 		lc_names <- lapply(lc_names, gsub, patt="^variableGEOCOUNTRY$", rep="rsp_cntry")
-		lc_names <- lapply(lc_names, gsub, patt="^variableGEOCITY$", rep="rsp_city")
-		lc_names <- lapply(lc_names, gsub, patt="^variableGEOREGION$", rep="rsp_region")
-		lc_names <- lapply(lc_names, gsub, patt="^variableGEOPOSTAL$", rep="rsp_post")
+		lc_names <- lapply(lc_names, gsub, patt="^variableGEOCITY$",    rep="rsp_city")
+		lc_names <- lapply(lc_names, gsub, patt="^variableGEOREGION$",  rep="rsp_region")
+		lc_names <- lapply(lc_names, gsub, patt="^variableGEOPOSTAL$",  rep="rsp_post")
 	}
 
 
@@ -153,16 +169,8 @@ pullsg <- function(sg_surveyid, api, completes=T, delete_sys_vars=F, keep_geo_va
 	if(reset_row_names) row.names(set) <- NULL
 
 	# Format Survey Gizmo date fields
-
-	if(save_as_factor){
-		lapply(set[, c('datestarted', 'datesubmitted')],
-			   as.character)
-		set[, c('datestarted', 'datesubmitted')] <- lapply(set[, c('datestarted', 'datesubmitted')],
-								   as.POSIXct, format="%Y-%m-%d")
-	} else {
-		set[, c('datestarted', 'datesubmitted')] <- lapply(set[, c('datestarted', 'datesubmitted')],
+	set[, c('datestarted', 'datesubmitted')] <- lapply(set[, c('datestarted', 'datesubmitted')],
 														   as.POSIXct, format="%Y-%m-%d")
-	}
 
 	return(set)
 }
