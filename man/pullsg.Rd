@@ -4,30 +4,32 @@
 \alias{pullsg}
 \title{Pull the raw survey response data from Survey Gizmo, storing an unmodified dataframe.}
 \usage{
-pullsg(sg_surveyid, api, completes = T, delete_sys_vars = F, clean = F,
-  reset_row_names = T)
+pullsg(sg_surveyid, api, completes = T, delete_sys_vars = F,
+  keep_geo_vars = T, clean = F, reset_row_names = T)
 }
 \arguments{
-\item{sg_surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse}call URL which follows "id/", e.g.: "...build/id/1234567"}
+\item{sg_surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}
 
 \item{api}{The user's private API key for Survey Gizmo}
 
-\item{completes}{Should the download drop partial responses (Default)?}
+\item{delete_sys_vars}{When true, deletes SG system variables (i.e., fields of the form [[variable(...)]] that do \emph{not} contain question responses. See \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for more information about fields returned by SG via the API)?}
 
-\item{delete_sys_vars}{Delete all SG system variables (i.e., non-response fields of the form [[variable(...)]] from the returned data.frame (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)?}
+\item{keep_geo_vars}{When true (the default), SG's geographic variables (lat/long, city, etc.), which are estimated using the respondent's IP address, are preserved in the returned data.frame}
 
 \item{clean}{This option performs three transformations to the returned data.frame:
 \enumerate{
   \item attempts to coerce vectors to numeric if all values are numbers or "" (uses \code{\link{type.convert}})
-  \item deletes SG system variables (i.e., non-question responses)
+  \item sets 'delete_sys_vars' to true
   \item removes other non-survey-question variables returned by the Survey Gizmo API, including: "contactid", "istestdata", "sessionid", "language", "ilinkid", and "sresponsecomment" (as of V4 of the SG API)
 }}
 
-\item{reset_row_names}{Reset row.names to 1, 2,..N in the returned dataframe (Default)?}
+\item{reset_row_names}{When true (the default), resets row names to 1, 2,..N in the returned dataframe}
+
+\item{completes_only}{When true (the Default), survey responses with a status of "Complete" are saved. Responses with a status of "disqualified", "partial", etc. are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)}
 }
 \description{
 This function downloads a survey's response data from Survey Gizmo (SG), saving
-the returned data as a \code{\link{data.frame}}. Because SG limits the size of JSON data pulls via the API (currently, the limit is 250),
+the returned data as an R \code{\link{data.frame}}. Because SG limits the size of JSON data pulls via the API (currently, the limit is 250),
 it calculates the number of pulls needed to download the entire response set and binds the returned frames.
 To ensure that variable names are interpretable in the returned data frame, it is strongly recommended
 that users first assign question \href{https://help.surveygizmo.com/help/article/link/using-question-aliases}{aliases} to each question prior to utilizing this function.
