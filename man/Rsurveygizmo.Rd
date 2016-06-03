@@ -4,17 +4,17 @@
 \name{Rsurveygizmo}
 \alias{Rsurveygizmo}
 \alias{Rsurveygizmo-package}
-\title{Rsurveygizmo: a method for downloading survey response data from the Survey Gizmo AWS servers}
+\title{Rsurveygizmo: A package for downloading survey and campaign data from Survey Gizmo.}
 \description{
 \pkg{Rsurveygizmo} allows you to access the Survey Gizmo (SG) REST API
-directly from the R console.
+directly from R
 By specifying your API key and a survey project ID you are able to download
-current SG survey responses into an R \code{\link{data.frame}}.
+current SG survey responses and/or campaign data into an R \code{\link{data.frame}}.
 }
 \details{
-The only function currently provided by \pkg{Rsurveygizmo} is
-\code{\link{pullsg}}, which pulls data from the SG servers and includes a
-variety of parameters to control the format of the returned
-object (see the \code{\link{pullsg}} help file for details).
+The two functions currently provided by \pkg{Rsurveygizmo} are
+\code{\link{pullsg}} and \code{\link{pullsg_campaign}}. These functions retrieve response and campaign data from SG and includes a
+variety of parameters to control the types of columns included within the returned object. \code{\link{pullsg}} optionally
+downloads campaign data (email addresses, etc.) as part of its execution using the \code{\link{pullsg_campaign}} function, merging the returned sets.
 }
 

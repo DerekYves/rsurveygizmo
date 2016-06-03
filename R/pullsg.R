@@ -8,6 +8,9 @@
 #'
 #' @param surveyid The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"
 #' @param api The user's private API key for Survey Gizmo
+#' @param verbose When true (the default), download progress is printed to standard output.
+#' @param mergecampaign When true, contact emails are downloaded from the SG "contact" object and merged with the survey responses. Note: this parameter should \emph{only} be used with survey projects that have an active email campaign.
+#' @param small Only merge email address when mergecampaign is true.
 #' @param completes_only When true (the Default), survey responses with a status of
 #' "Complete" are saved. Responses with a status of "disqualified", "partial", etc.
 #' are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)
@@ -35,14 +38,15 @@
 #'   \item sets 'delete_sys_vars' to true
 #'   \item removes other non-survey-question variables returned by the Survey Gizmo API, including: "contactid", "istestdata", "sessionid", "language", "ilinkid", and "sresponsecomment" (as of V4 of the SG API)
 #' }
+
 #' @importFrom jsonlite fromJSON
 #' @export
-pullsg <- function(surveyid, api, completes_only=T, delete_sys_vars=F, keep_geo_vars=T, clean=F, reset_row_names=T) {
+pullsg <- function(surveyid, api, completes_only=T, verbose=T, mergecampaign=F, delete_sys_vars=F, keep_geo_vars=T, clean=F, reset_row_names=T, small=F) {
 
 	options(stringsAsFactors=F)
-
-	#Set hard-coded parameters
-	token <- paste0('?api_token=', api) #Must be in the URL's first position
+	if(small==T & mergecampaign==F) warning('\nThe "small" parameter should be false when "mergecampaign" is false. This parameter was ignored.')
+	# Set hard-coded URL parameters
+	token <- paste0('?api_token=', api) # Must be in the first trailing URL position
 	url      <- 'https://restapi.surveygizmo.com/v4/survey/'
 	response <- "/surveyresponse/"
 	question <- "/surveyquestion/"
@@ -63,11 +67,11 @@ pullsg <- function(surveyid, api, completes_only=T, delete_sys_vars=F, keep_geo_
 	lc_qurl  <- paste0(url, surveyid, question, token)
 
 	# Get base response parameters of the survey and extract N
-	lc_base     <- fromJSON(txt=lc_base)
-	lc_samp_sz  <- as.integer(lc_base[['total_count']])
+	lc_base      <- fromJSON(txt=lc_base)
+	lc_resp_cnt  <- as.integer(lc_base[['total_count']])
 
 	# Calculate page number (starting with 1) based on 100 responses per call
-	lc_respnum  <- ceiling(lc_samp_sz/100)
+	lc_respnum  <- ceiling(lc_resp_cnt/100)
 
 	# Retrieve the question list from the "/surveyquestion/" call
 	lc_qs   <- fromJSON(txt=lc_qurl)
@@ -90,8 +94,7 @@ pullsg <- function(surveyid, api, completes_only=T, delete_sys_vars=F, keep_geo_
 	# Retrieve the response data with the "/surveyresponse/" call
 	for(i in 1:lc_respnum){
 		sg_return_url  <- paste0(lc_furl, i)
-		#sg_return_name <- paste0("lc_survey_page", i)
-		message("Retrieving page ", i)
+		if(verbose) message("Retrieving page ", i)
 		sg_return_data <- fromJSON(txt=sg_return_url)
 		sg_return_data <- as.data.frame(sg_return_data$data)
 		assign(paste0("lc_survey_page", i), sg_return_data)
@@ -171,6 +174,17 @@ pullsg <- function(surveyid, api, completes_only=T, delete_sys_vars=F, keep_geo_
 	# Format Survey Gizmo date fields
 	set[, c('datestarted', 'datesubmitted')] <- lapply(set[, c('datestarted', 'datesubmitted')],
 														   as.POSIXct, format="%Y-%m-%d")
+
+	# Merge data from the contact object with survey returns
+	if(mergecampaign) {
+		if(verbose) message('\nMerging campaign data with survey "', surveyid, '".')
+
+	campaign <- Rsurveygizmo::pullsg_campaign(surveyid, api, small=small)
+	if(!is.null(campaign))  set <- merge(campaign, set, by="contactid", all.y=TRUE)
+	if(is.null(campaign)) message('Because no email campaign data was located for survey "', surveyid, '", email addresses will not be merged with the survey returns.')
+	}
+
+	if(verbose) message('Data retrieval for survey "', surveyid, '" is complete!\n')
 
 	return(set)
 }

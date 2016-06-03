@@ -4,8 +4,9 @@
 \alias{pullsg}
 \title{Download survey response data from Survey Gizmo, storing an R dataframe.}
 \usage{
-pullsg(surveyid, api, completes_only = T, delete_sys_vars = F,
-  keep_geo_vars = T, clean = F, reset_row_names = T)
+pullsg(surveyid, api, completes_only = T, verbose = T, mergecampaign = F,
+  delete_sys_vars = F, keep_geo_vars = T, clean = F,
+  reset_row_names = T, small = F)
 }
 \arguments{
 \item{surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}
@@ -15,6 +16,10 @@ pullsg(surveyid, api, completes_only = T, delete_sys_vars = F,
 \item{completes_only}{When true (the Default), survey responses with a status of
 "Complete" are saved. Responses with a status of "disqualified", "partial", etc.
 are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)}
+
+\item{verbose}{When true (the default), download progress is printed to standard output.}
+
+\item{mergecampaign}{When true, contact emails are downloaded from the SG "contact" object and merged with the survey responses. Note: this parameter should \emph{only} be used with survey projects that have an active email campaign.}
 
 \item{delete_sys_vars}{When true, deletes SG system variables (i.e., fields
 of the form [[variable(...)]] that do \emph{not} contain question responses.
@@ -43,6 +48,8 @@ the geographic variables to:
 }}
 
 \item{reset_row_names}{When true (the default), resets row names to 1, 2,..N in the returned dataframe}
+
+\item{small}{Only merge email address when mergecampaign is true.}
 }
 \description{
 This function downloads a survey's response data from Survey Gizmo (SG), saving
