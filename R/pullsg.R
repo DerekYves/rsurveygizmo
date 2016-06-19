@@ -32,6 +32,7 @@
 #'   \item \emph{rsp_post}
 #'   }
 #' @param reset_row_names When true (the default), resets row names to 1, 2,..N in the returned dataframe
+#' @param var_name_append When true (the default), appends the stub "_ID[question_numer] to questions \emph{without} an alias to avoid variable name conflicts.
 #' @param clean This option performs three transformations to the returned data.frame:
 #' \enumerate{
 #'   \item attempts to coerce vectors to numeric if all values are numbers or "" (uses \code{\link{type.convert}})
@@ -41,7 +42,7 @@
 
 #' @importFrom jsonlite fromJSON
 #' @export
-pullsg <- function(surveyid, api, completes_only=T, verbose=T, mergecampaign=F, delete_sys_vars=F, keep_geo_vars=T, clean=F, reset_row_names=T, small=F) {
+pullsg <- function(surveyid, api, completes_only=T, verbose=T, var_name_append=T, mergecampaign=F, delete_sys_vars=F, keep_geo_vars=T, clean=F, reset_row_names=T, small=F) {
 
 	options(stringsAsFactors=F)
 	if(small==T & mergecampaign==F) warning('\nThe "small" parameter should be false when "mergecampaign" is false. This parameter was ignored.')
@@ -79,12 +80,20 @@ pullsg <- function(surveyid, api, completes_only=T, verbose=T, mergecampaign=F, 
 	lc_qs   <- as.data.frame(lc_qs$data)
 
 	# Extract question text for questions without a defined SG alias, stripping
-	# html tags, punctuation, and spaces,  keeping the first 35 characters and
+	# html tags, punctuation, and spaces, keeping the first 35 characters and
 	# appending the question id.
 	lc_qs$qtext <- gsub("<.*?>", "", lc_qs$title$English)
 	lc_qs$qtext <- gsub("[[:punct:]]", "", lc_qs$qtext)
-	lc_qs$qtext <- paste0(substr(gsub("[[:space:]]", ".", lc_qs$qtext), 1, 35),
+
+	if(var_name_append) {
+		lc_qs$qtext <- paste0(substr(gsub("[[:space:]]", ".", lc_qs$qtext), 1, 35),
 						  "_ID", lc_qs$id)
+		lc_qs$qtext <- trimws(lc_qs$qtext)
+	} else {
+		lc_qs$qtext <- paste0(substr(gsub("[[:space:]]", ".", lc_qs$qtext), 1, 75))
+		lc_qs$qtext <- trimws(lc_qs$qtext)
+	}
+
 	lc_qs$shortname <- ifelse(is.na(lc_qs$shortname) | lc_qs$shortname=="",
 							  lc_qs$qtext, lc_qs$shortname)
 

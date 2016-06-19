@@ -4,9 +4,9 @@
 \alias{pullsg}
 \title{Download survey response data from Survey Gizmo, storing an R dataframe.}
 \usage{
-pullsg(surveyid, api, completes_only = T, verbose = T, mergecampaign = F,
-  delete_sys_vars = F, keep_geo_vars = T, clean = F,
-  reset_row_names = T, small = F)
+pullsg(surveyid, api, completes_only = T, verbose = T,
+  var_name_append = T, mergecampaign = F, delete_sys_vars = F,
+  keep_geo_vars = T, clean = F, reset_row_names = T, small = F)
 }
 \arguments{
 \item{surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}
@@ -18,6 +18,8 @@ pullsg(surveyid, api, completes_only = T, verbose = T, mergecampaign = F,
 are deleted (see \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-returned-fields}{this link} for documentation)}
 
 \item{verbose}{When true (the default), download progress is printed to standard output.}
+
+\item{var_name_append}{When true (the default), appends the stub "_ID[question_numer] to questions \emph{without} an alias to avoid variable name conflicts.}
 
 \item{mergecampaign}{When true, contact emails are downloaded from the SG "contact" object and merged with the survey responses. Note: this parameter should \emph{only} be used with survey projects that have an active email campaign.}
 

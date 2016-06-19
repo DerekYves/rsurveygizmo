@@ -5,10 +5,10 @@ Version: 0.1.0
 Author: Derek Darves
 URL: https://github.com/DerekYves/rsurveygizmo
 Maintainer: Derek Darves <darves@gmail.com>
-Description: Pulls response and campaign data from Survey Gizmo using your account API key
-    and a valid survey project number, returning an R data.frame.
+Description: Pulls response and campaign data from Survey Gizmo using your
+    account API key and a valid survey project number, returning an R data.frame.
 License: GPL-3
 Imports:
     jsonlite
 LazyData: TRUE
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 5.0.1
