@@ -4,9 +4,10 @@
 \alias{pullsg}
 \title{Download survey response data from Survey Gizmo, storing an R dataframe.}
 \usage{
-pullsg(surveyid, api, completes_only = T, verbose = T,
-  var_name_append = T, mergecampaign = F, delete_sys_vars = F,
-  keep_geo_vars = T, clean = F, reset_row_names = T, small = F)
+pullsg(surveyid, api, completes_only = TRUE, verbose = TRUE,
+  var_name_append = TRUE, mergecampaign = FALSE, delete_sys_vars = FALSE,
+  keep_geo_vars = TRUE, clean = FALSE, reset_row_names = TRUE,
+  small = FALSE)
 }
 \arguments{
 \item{surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}

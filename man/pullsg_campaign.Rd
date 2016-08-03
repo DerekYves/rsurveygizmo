@@ -4,8 +4,8 @@
 \alias{pullsg_campaign}
 \title{Download survey campaign data from Survey Gizmo, storing an R dataframe.}
 \usage{
-pullsg_campaign(surveyid, api, reset_row_names = T, customfields = T,
-  contactinfo = T, small = F, verbose = T)
+pullsg_campaign(surveyid, api, reset_row_names = TRUE, customfields = TRUE,
+  contactinfo = TRUE, small = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{surveyid}{The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"}

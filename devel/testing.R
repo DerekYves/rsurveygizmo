@@ -1,21 +1,58 @@
-#' Download survey campaign data from Survey Gizmo, storing an R dataframe.
-#'
-#' This function downloads campaign data from Survey Gizmo (SG), saving
-#' the returned email/response data as an R \code{\link{data.frame}}. Because SG limits the size of JSON data pulls via the API (currently, the limit is 250),
-#' it calculates the number of pulls needed to download the entire response set and binds the returned frames. The "contactid" field joins email address and other campaign data with the survey response objects (see \code{\link{pullsg}}).
-#' Note that this function only downloads contact object data that is accessible through the API, specifically, contact objects associated with the subtype "email" where status is "Active."
-#'
-#' @param surveyid The survey's unique SG ID number (in V4 of the API, the portion of the \href{https://apihelp.surveygizmo.com/help/article/link/surveyresponse-sub-object}{surveyresponse} call URL which follows "id/", e.g.: "...build/id/1234567"
-#' @param api The user's private API key for Survey Gizmo
-#' @param verbose When true (the default), download progress is printed to standard output.
-#' \strong{NOTE:} When set to false, pullsg will change the stub of SG system variables to \emph{sys_*}
-#' @param reset_row_names When true (the default), resets row names to 1, 2,..N in the returned dataframe
-#' @param customfields When true (the default), SG's "custom fields" associated with the contact are preserved in the returned data.
-#' @param contactinfo When true (the default), SG's phone and physical address fields associated with the contact are preserved in the returned data.
-#' @param small When true, the only fields returned are contactid and email address.
+Hi Derek,
 
-#' @importFrom jsonlite fromJSON
-#' @export
+It look like RSurveyGizmo gives duplicates. I make a small script to you to see the problem and attached the csv export for surveygizmo.
+
+Sincerely,
+Alex
+
+
+
+# RSurveyGizmo Connection to IT Survey
+api    <- "EB250A459E67401399E31FCC02189478" # define CPG’s private api key
+surveyid <- 2748601
+
+it_raw <- pullsg(2748601, key, mergecampaign=T, small=F)
+
+
+
+issue <- duplicated(it_raw$responseid)
+table(issue)
+
+#Loading CSV of SurveyGizmo Export
+gizmo <- read.csv(paste0(folder, "/testing_issue.csv"))
+gizmo <- duplicated(gizmo$Response.ID)
+table(gizmo)
+
+
+camp$dlastsent
+
+camp <- pullsg_campaign(2748601, key)
+
+test <- camp[with(camp, order(contactid, -as.numeric(dlastsent))), ]
+
+test1 <- camp[order(camp[,"contactid"], -as.numeric(camp[,"dlastsent"])), ]
+
+all.equal(test,test1)
+test1 <- test1[!duplicated(test1$contactid), ]
+
+test <- camp[order(camp$contactid, decreasing=TRUE), ]
+
+			 base =    z[order(z$mean),]
+
+# There are duplicates on contact ID
+resp <- pullsg(2748601, key, mergecampaign=F, small=F)
+
+table(duplicated(resp$contactid))
+
+# Response Data
+test <- data.frame(dups=duplicated(resp$contactid), resp)
+
+# Campaign Data
+campt <- data.frame(dups=duplicated(camp$contactid), camp)
+
+api    <- "EB250A459E67401399E31FCC02189478"
+surveyid <- 2748601
+verbose=TRUE
 
 
 pullsg_campaign <- function(surveyid, api, reset_row_names=TRUE, customfields=TRUE, contactinfo=TRUE, small=FALSE, verbose=TRUE){
@@ -37,8 +74,8 @@ pullsg_campaign <- function(surveyid, api, reset_row_names=TRUE, customfields=TR
 	cam_ret     <- jsonlite::fromJSON(txt=cam_base) # get count of "surveyresponse" object
 	cam_size    <- as.integer(cam_ret["total_count"])
 	cam_respnum <- ceiling(cam_size/10)
-	message("\n  Retrieving global campaign parameters:")
 	progb       <- txtProgressBar(min = 0, max = length(cam_respnum), style = 3)
+	message("Retrieving campaign parameters:\n")
 
 	# Retrieve all link/campaign ids using the "surveyresponse" call
 	cam_call  <- paste0(url, surveyid, camp, token, results10, pages)
@@ -52,6 +89,7 @@ pullsg_campaign <- function(surveyid, api, reset_row_names=TRUE, customfields=TR
 	}
 	close(progb)
 
+
 	#Bind the frame returned by JSONlite
 	cam_fullset <- do.call("rbind", mget(ls(pattern="cam_returns")))
 
@@ -62,10 +100,11 @@ pullsg_campaign <- function(surveyid, api, reset_row_names=TRUE, customfields=TR
 
 	if(length(email_ids)!=0) {
 
-		message('\n  Retrieving campaign contact data:')
-		progb <- txtProgressBar(min = 0, max = length(email_ids), style = 3)
+		message('Retrieving contact data for ', length(email_ids), ' email campaigns:\n')
 
 		# Get contact data using the "surveyresponse/*/contact/" call
+		progb <- txtProgressBar(min = 0, max = length(email_ids), style = 3)
+
 		for(i in 1:length(email_ids)){
 			contact_call     <- paste0(url, surveyid, camp, email_ids[i], cont, token, results100, pages)
 			contact_base     <- paste0(url, surveyid, camp, email_ids[i], cont, token, results10)
@@ -83,21 +122,24 @@ pullsg_campaign <- function(surveyid, api, reset_row_names=TRUE, customfields=TR
 				rm(contact_return_data)
 			}
 		}
+
 		close(progb)
 
-	if(verbose) message('\nFinished downloading campaign data.')
+		if(verbose) message('Finished downloading campaign data.')
 
-	# Bind the contact frames returned by JSONlite
-	contact_fullset <- do.call("rbind", mget(ls(pattern="contact_returns_")))
-	names(contact_fullset)[names(contact_fullset)=="id"] <- "contactid"
+		# Bind the contact frames returned by JSONlite
+		contact_fullset <- do.call("rbind", mget(ls(pattern="contact_returns_")))
+		names(contact_fullset)[names(contact_fullset)=="id"] <- "contactid"
 
-	# Convert to POSIX date format
-	contact_fullset$dlastsent <- as.POSIXct(contact_fullset$dlastsent)
+		# Convert to POSIX date format
+		contact_fullset$dlastsent <- as.POSIXct(contact_fullset$dlastsent)
 
-	if(sum(duplicated(contact_fullset$contactid)))
-		message("\nWarning: duplicated contactids found within the campaign data!\n",
-				"--> Recommendation: Examine rows where 'contactid' is duplicated prior to merging with survey responses.")
-
+		if(sum(duplicated(contact_fullset$contactid))){
+			message("Warning: duplicated contact ids found within the campaign data!\n",
+					"We recommended that you examine the campaign data duplicates\n",
+					"prior to merging with survey responses.")
+			as.POSIXct(contact_fullset$dlastsent)
+			contact_fullset <- contact_fullset[-order(contact_fullset$dlastsent), ]
 
 		if(reset_row_names) rownames(contact_fullset) <- NULL
 		if(customfields==FALSE) contact_fullset <- contact_fullset[ , -grep("^scustomfield", names(contact_fullset))]
@@ -105,20 +147,4 @@ pullsg_campaign <- function(surveyid, api, reset_row_names=TRUE, customfields=TR
 		if(small) contact_fullset <- contact_fullset[ , c("contactid", "semailaddress")]
 
 		return(contact_fullset)
-
-	if(verbose) message('\nCampaign data retrieval is complete!\n')
-
-	} else {
-		message('There is no email campaign(s) associated with survey "', surveyid, '", aborting campaign download!')
-	}
-
-}
-
-
-
-
-
-
-
-
 
