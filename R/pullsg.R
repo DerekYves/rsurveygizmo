@@ -50,7 +50,7 @@ pullsg <- function(surveyid, api, completes_only=TRUE, verbose=TRUE, var_name_ap
 	if(small & mergecampaign==FALSE) warning('\nThe "small" parameter should be false when "mergecampaign" is false. This parameter was ignored.')
 	# Set hard-coded URL parameters
 	token <- paste0('?api_token=', api) # Must be in the first trailing URL position
-	url      <- 'https://restapi.surveygizmo.com/v4/survey/'
+	url      <- 'https://api.alchemer-ca.com/v5/survey/'
 	response <- "/surveyresponse/"
 	question <- "/surveyquestion/"
 	pages    <- "&page="
